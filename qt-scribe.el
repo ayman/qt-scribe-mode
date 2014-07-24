@@ -1,4 +1,4 @@
-;;; qt-scribe.el --- AppleScripts for Quicktime  -*- lexical-binding: t; -*-
+;;; qt-scribe.el --- AppleScript based transcription for Quicktime  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2014  David A. Shamma
 
@@ -50,6 +50,20 @@
 	        tell the front document to play
             end tell")))
 
+(defun qt-scribe-step-backward ()
+  (interactive)
+  (do-applescript
+   (format "tell application "QuickTime Player"
+	      front document step backward by 30	
+            end tell")))
+
+(defun qt-scribe-step-forward ()
+  (interactive)
+  (do-applescript
+   (format "tell application "QuickTime Player"
+	      front document step forward by 30	
+            end tell")))
+
 (defun qt-scribe-toggle-playback ()
   (interactive)
   (do-applescript
@@ -96,7 +110,9 @@ For detail, see `comment-dwim'."
 
 
 (defconst qt-scribe-types '("file:" "time:"))
+
 (defconst qt-scribe-type-regexp (regexp-opt qt-scribe-types 'words))
+
 (setq qt-scribe-font-lock-keywords
       `(
         (,qt-scribe-type-regexp . font-lock-type-face)
@@ -111,7 +127,9 @@ For detail, see `comment-dwim'."
 (defvar qt-scribe-mode-map
   (let ((keymap (make-sparse-keymap)))
     (define-key keymap (kbd "C-c RET") 'qt-scribe-get-time)
-    (define-key keymap (kbd "C-c j") 'qt-scribe-toggle-playback)
+    (define-key keymap (kbd "C-c SPC") 'qt-scribe-toggle-playback)
+    (define-key keymap (kbd "C-c j") 'qt-scribe-step-backward)
+    (define-key keymap (kbd "C-c k") 'qt-scribe-step-forward)
     keymap)
   "Keymap for qt-scribe major mode")
 
