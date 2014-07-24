@@ -50,7 +50,7 @@
     (do-applescript
      (format "tell application \"QuickTime Player\"
                 the name of the front window
-              end tell"))))
+              end tell")))))
 
 (defun qt-get-time ()
   (interactive)
