@@ -24,8 +24,6 @@
 
 ;; All symbols use prefix qt-.
 
-;; todo: make the timecode clickable to seek the video
-
 ;;; Code:
 
 (require 'cl-lib)
@@ -47,20 +45,21 @@
 (defun qt-get-filename ()
   (interactive)
   (insert
-   (format "[file: '%s']"
-           (do-applescript
-            (format "tell application \"QuickTime Player\"
-	               the name of the front window
-                     end tell"))))
+   (format 
+    "[file: '%s']"
+    (do-applescript
+     (format "tell application \"QuickTime Player\"
+                the name of the front window
+              end tell"))))
 
 (defun qt-get-time ()
   (interactive)
   (insert
-   (format "[%s]"
-           (do-applescript
-            (format 
-             "tell application \"QuickTime Player\"
- 	          the current time of the front document as string
+   (format 
+    "[%s]"
+    (do-applescript
+     (format "tell application \"QuickTime Player\"
+ 	        the current time of the front document as string
               end tell")))))
 
 (provide 'qt-scribe)
