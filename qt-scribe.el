@@ -28,6 +28,14 @@
 
 (require 'cl-lib)
 
+(defun qt-format-timecode (sec)
+  (format "%02d:%02d:%02d.%02d" 
+          (/ (floor sec) 3600)
+          (/ (% (floor sec) 3600) 60)
+          (% (% (floor sec) 3600) 60)
+          (floor (* (- sec (floor sec)) 100))
+          (- (* sec 100) (* (floor sec) 100))))
+
 (defun qt-pause ()
   (interactive)
   (do-applescript
@@ -46,7 +54,7 @@
   (interactive)
   (insert
    (format 
-    "[file: '%s']"
+    "[file: '%s']\n"
     (do-applescript
      (format "tell application \"QuickTime Player\"
                 the name of the front window
@@ -56,12 +64,15 @@
   (interactive)
   (insert
    (format 
-    "[%s]"
-    (do-applescript
-     (format "tell application \"QuickTime Player\"
- 	        the current time of the front document as string
-              end tell")))))
+    "[%s] "
+    (qt-format-timecode
+     (string-to-number 
+      (do-applescript
+       (format "tell application \"QuickTime Player\"
+  	          the current time of the front document as string
+                end tell")))))))
 
 (provide 'qt-scribe)
 
 ;;; qt-scribe.el ends here
+
