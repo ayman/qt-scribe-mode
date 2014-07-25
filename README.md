@@ -6,6 +6,9 @@ current movie into the active buffer.
 
 This is intended for doing transcription of videos inside of emacs.
 
+To get started, load the file and invoke the mode like: `M-x
+qt-scribe-mode`.
+
 Produces a text file that you can `grep` for content in a human
 readable format like:
 
