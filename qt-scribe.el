@@ -26,15 +26,61 @@
 
 ;;; Code:
 
-(require 'cl-lib)
+(eval-when-compile
+  ;; (require 'button)
+  (require 'cl-lib))
+
+(defgroup qt-scribe nil
+  "Syntax highlighting and interop for MacOX Quicktime Player."
+  :link '(url-link "https://github.com/ayman/qt-scribe")
+  :prefix "qt-scribe-"
+  :group 'external)
+
+(defcustom quicktime-executable "QuickTime Player"
+  "Process to invoke.  Name only."
+  :group 'qt-scribe-mode
+  :type '(string))
+
+(defcustom back-lag 1
+  "Time in seconds to skip back the timecode that's inserted."
+  :group 'qt-scribe-mode
+  :type '(number))
+
+(defun qt-scribe--make-buttons ()
+  (while
+      (re-search-forward
+       "\\[\\([0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9]\\)\\]"
+       nil
+       t)
+    (setq temp-match (match-string 1))
+    (setq temp-seconds (qt-scribe-deformat-timecode temp-match))
+    (delete-char -13)
+    (insert-button (format "\[%s\]" temp-match)
+                   'action (lambda (x) (qt-scribe-seek (button-get x 'seconds)))
+                   'seconds temp-seconds)))
 
 (defun qt-scribe-format-timecode (sec)
+  "Take a number in seconds and make a pretty timecode string."
   (format "%02d:%02d:%02d.%02d" 
           (/ (floor sec) 3600)
           (/ (% (floor sec) 3600) 60)
           (% (% (floor sec) 3600) 60)
           (floor (* (- sec (floor sec)) 100))
           (- (* sec 100) (* (floor sec) 100))))
+
+(defun qt-scribe-deformat-timecode (timecode)
+  "Take a pretty timecode string and convert it to seconds."
+  (setq times (split-string timecode ":"))
+  (+ (+ (* 3600 (string-to-number (car times)))
+        (* 60 (string-to-number (cadr times))))
+     (string-to-number (caddr times))))
+
+(defun qt-scribe-seek (sec)
+  (do-applescript
+   (format "tell application \"QuickTime Player\"
+	      set the current time of the front document to %d
+            end tell"
+           sec)))
 
 (defun qt-scribe-pause ()
   (interactive)
