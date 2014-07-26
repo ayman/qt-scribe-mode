@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2014  David A. Shamma
 
-;; Author: David A. Shamma <>
+;; Author: David A. Shamma @ayman
 ;; Version: 0.1
 ;; Keywords: tools, extensions, languages
 ;; Created: 2014-07-20
@@ -36,12 +36,12 @@
   :prefix "qt-scribe-"
   :group 'external)
 
-(defcustom quicktime-executable "QuickTime Player"
+(defcustom qt-scribe-quicktime-executable "QuickTime Player"
   "Process to invoke.  Name only."
   :group 'qt-scribe-mode
   :type '(string))
 
-(defcustom back-lag 1
+(defcustom qt-scribe-back-lag 1
   "Time in seconds to skip back the timecode that's inserted."
   :group 'qt-scribe-mode
   :type '(number))
@@ -53,13 +53,13 @@
        nil
        t)
     (setq temp-match (match-string 1))
-    (setq temp-seconds (qt-scribe-deformat-timecode temp-match))
+    (setq temp-seconds (qt-scribe--deformat-timecode temp-match))
     (delete-char -13)
     (insert-button (format "\[%s\]" temp-match)
-                   'action (lambda (x) (qt-scribe-seek (button-get x 'seconds)))
+                   'action (lambda (x) (qt-scribe--seek (button-get x 'seconds)))
                    'seconds temp-seconds)))
 
-(defun qt-scribe-format-timecode (sec)
+(defun qt-scribe--format-timecode (sec)
   "Take a number in seconds and make a pretty timecode string."
   (format "%02d:%02d:%02d.%02d" 
           (/ (floor sec) 3600)
@@ -68,14 +68,15 @@
           (floor (* (- sec (floor sec)) 100))
           (- (* sec 100) (* (floor sec) 100))))
 
-(defun qt-scribe-deformat-timecode (timecode)
+(defun qt-scribe--deformat-timecode (timecode)
   "Take a pretty timecode string and convert it to seconds."
   (setq times (split-string timecode ":"))
   (+ (+ (* 3600 (string-to-number (car times)))
         (* 60 (string-to-number (cadr times))))
      (string-to-number (caddr times))))
 
-(defun qt-scribe-seek (sec)
+(defun qt-scribe--seek (sec)
+  (qt-scribe-open-file)
   (do-applescript
    (format "tell application \"QuickTime Player\"
 	      set the current time of the front document to %d
@@ -121,27 +122,48 @@
               end if
             end tell")))
 
+(defun qt-scribe-open-file (&optional activate)
+  (interactive)
+  (setq temp-point (point))
+  (beginning-of-buffer)
+  (re-search-forward "\\[file: \\(.+\\)\\]" nil t)
+  (setq file (match-string 1))
+  (if activate
+      (do-applescript
+       (format "tell application \"%s\"
+                  activate
+                  open %s
+                end tell
+                delay 1" qt-scribe-quicktime-executable file))
+    (do-applescript
+     (format "tell application \"%s\"
+                open %s
+              end tell
+              delay 1" qt-scribe-quicktime-executable file)))
+  (goto-char temp-point))
+
 (defun qt-scribe-get-filename ()
   (interactive)
   (insert
    (format 
     "[file: \"%s\"]\n"
     (do-applescript
-     (format "tell application \"QuickTime Player\"
-                the name of the front window
-              end tell")))))
+     (format "tell application \"%s\"
+                -- the name of the front window
+                the file of the front document as string
+              end tell" qt-scribe-quicktime-executable)))))
 
 (defun qt-scribe-get-time ()
   (interactive)
   (insert
    (format 
     "[%s] "
-    (qt-scribe-format-timecode
+    (qt-scribe--format-timecode
      (string-to-number 
       (do-applescript
-       (format "tell application \"QuickTime Player\"
+       (format "tell application \"%s\"
   	          the current time of the front document as string
-                end tell")))))))
+                end tell" qt-scribe-quicktime-executable)))))))
 
 ;; command to comment/uncomment text
 (defun qt-scribe--comment-dwim (arg)
@@ -154,8 +176,7 @@ For detail, see `comment-dwim'."
         )
     (comment-dwim arg)))
 
-
-(defconst qt-scribe-types '("file:" "time:"))
+(defconst qt-scribe-types '("file:"))
 
 (defconst qt-scribe-type-regexp (regexp-opt qt-scribe-types 'words))
 
@@ -176,6 +197,8 @@ For detail, see `comment-dwim'."
     (define-key keymap (kbd "C-c SPC") 'qt-scribe-toggle-playback)
     (define-key keymap (kbd "C-c j") 'qt-scribe-step-backward)
     (define-key keymap (kbd "C-c k") 'qt-scribe-step-forward)
+    (define-key keymap (kbd "C-c f") 'qt-scribe-get-filename)
+    (define-key keymap (kbd "C-c o") 'qt-scribe-open-file)
     keymap)
   "Keymap for qt-scribe major mode")
 
@@ -184,7 +207,8 @@ For detail, see `comment-dwim'."
   "Major mode for transcribing using the Quicktime Player on Mac OS."
   (setq mode-name "qt-scribe")
   (setq font-lock-defaults '((qt-scribe-font-lock-keywords)))
-  (define-key qt-scribe-mode-map [remap comment-dwim] 'qt-scribe-comment-dwim))
+  (define-key qt-scribe-mode-map [remap comment-dwim] 'qt-scribe-comment-dwim)
+  (qt-scribe--make-buttons))
 
 (provide 'qt-scribe-mode)
 
