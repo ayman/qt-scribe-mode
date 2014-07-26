@@ -21,6 +21,9 @@ readable format like:
 [00:02:04.06] Sets alarm.
 ```
 
+In the mode, the timestamps are clickable links to seek the player to
+that point.
+
 keybindings
 -----------
 
@@ -28,4 +31,6 @@ keybindings
 * `C-c RET` inserts a timestamp
 * `C-c j` jump back a few seconds
 * `C-c k` jump forward a few seconds
+* `C-c f` insert the file mark with the active qt file
+* `C-c o` open the file
 
