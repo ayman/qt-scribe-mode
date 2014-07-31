@@ -59,13 +59,21 @@
                    'action (lambda (x) (qt-scribe--seek (button-get x 'seconds)))
                    'seconds temp-seconds)))
 
+;; (defun qt-scribe--format-timecode (xsec)
+;;   "Take a number in seconds and make a pretty timecode string."
+;;   (format "%02d:%02d:%02d.%02d" 
+;;           (/ (floor sec) 3600)
+;;           (/ (% (floor sec) 3600) 60)
+;;           (% (% (floor sec) 3600) 60)
+;;           (floor (* (- sec (floor sec)) 100))
+;;           (- (* sec 100) (* (floor sec) 100))))
+
 (defun qt-scribe--format-timecode (sec)
   "Take a number in seconds and make a pretty timecode string."
   (format "%02d:%02d:%02d.%02d" 
           (/ (floor sec) 3600)
           (/ (% (floor sec) 3600) 60)
           (% (% (floor sec) 3600) 60)
-          (floor (* (- sec (floor sec)) 100))
           (- (* sec 100) (* (floor sec) 100))))
 
 (defun qt-scribe--deformat-timecode (timecode)
@@ -100,14 +108,14 @@
 (defun qt-scribe-step-backward ()
   (interactive)
   (do-applescript
-   (format "tell application "QuickTime Player"
+   (format "tell application \"QuickTime Player\"
 	      front document step backward by 30	
             end tell")))
 
 (defun qt-scribe-step-forward ()
   (interactive)
   (do-applescript
-   (format "tell application "QuickTime Player"
+   (format "tell application \"QuickTime Player\"
 	      front document step forward by 30	
             end tell")))
 
@@ -125,7 +133,8 @@
 (defun qt-scribe-open-file (&optional activate)
   (interactive)
   (setq temp-point (point))
-  (beginning-of-buffer)
+  (goto-char 0)
+  ;; (beginning-of-buffer)
   (re-search-forward "\\[file: \\(.+\\)\\]" nil t)
   (setq file (match-string 1))
   (if activate
@@ -155,15 +164,17 @@
 
 (defun qt-scribe-get-time ()
   (interactive)
-  (insert
-   (format 
-    "[%s] "
-    (qt-scribe--format-timecode
-     (string-to-number 
-      (do-applescript
-       (format "tell application \"%s\"
-  	          the current time of the front document as string
-                end tell" qt-scribe-quicktime-executable)))))))
+  (setq temp-seconds 
+        (string-to-number
+         (do-applescript
+          (format "tell application \"%s\"
+  	             the current time of the front document as string
+                   end tell" qt-scribe-quicktime-executable))))
+  (insert-button 
+   (format  "[%s]" 
+            (qt-scribe--format-timecode temp-seconds))
+   'action (lambda (x) (qt-scribe--seek (button-get x 'seconds)))
+   'seconds temp-seconds))
 
 ;; command to comment/uncomment text
 (defun qt-scribe--comment-dwim (arg)
