@@ -1,5 +1,5 @@
-qt-scribe
-=========
+qt-scribe-mode
+==============
 
 Remote control the Quicktime Player and insert some data from the
 current movie into the active buffer.
@@ -7,7 +7,12 @@ current movie into the active buffer.
 This is intended for doing transcription of videos inside of emacs.
 
 To get started, load the file and invoke the mode like: `M-x
-qt-scribe-mode`.
+qt-scribe-mode`.  I'd recommend you use an extension like `.qts` so
+the mode can auto-load.  Set something like this in your `.emacs`
+
+```
+(add-to-list 'auto-mode-alist '("\\.qts$" . qt-scribe-mode))
+```
 
 Produces a text file that you can `grep` for content in a human
 readable format like:

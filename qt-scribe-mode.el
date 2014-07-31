@@ -59,15 +59,6 @@
                    'action (lambda (x) (qt-scribe--seek (button-get x 'seconds)))
                    'seconds temp-seconds)))
 
-;; (defun qt-scribe--format-timecode (xsec)
-;;   "Take a number in seconds and make a pretty timecode string."
-;;   (format "%02d:%02d:%02d.%02d" 
-;;           (/ (floor sec) 3600)
-;;           (/ (% (floor sec) 3600) 60)
-;;           (% (% (floor sec) 3600) 60)
-;;           (floor (* (- sec (floor sec)) 100))
-;;           (- (* sec 100) (* (floor sec) 100))))
-
 (defun qt-scribe--format-timecode (sec)
   "Take a number in seconds and make a pretty timecode string."
   (format "%02d:%02d:%02d.%02d" 
